@@ -1,0 +1,9 @@
+The Nice Asgard Project (element14/Texas Instruments Ultimate Road Test)
+------
+NiceAsgardZNP contains the main files for the ZigBee portion of the system.
+
+It is made up of example files of APIs produced by TI and modified to send the messages required for this project.
+
+NO guaranty is provided with this software. It may well not work at all.
+
+Uses TI CC2530 ZigBee Network Processor Mini Development Kit.
