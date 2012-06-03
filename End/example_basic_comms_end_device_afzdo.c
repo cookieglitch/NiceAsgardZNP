@@ -36,6 +36,8 @@
 #include "../ZNP/af_zdo.h"
 #include "znp_example_utils.h"   //for handleReturnValue() and polling()
 
+#include "remotedefs.h"
+
 /** function pointer (in hal file) for the function that gets called when the timer generates an int*/
 extern void (*timerIsr)(void);
 
@@ -44,9 +46,73 @@ signed int returnValue;
 /** Handles timer interrupt */
 void handleTimer();
 
+
+// TODO Write drivers
+
+/**
+ * changeBlindPos
+ * \param New blind position (int)
+ * \return None
+ * \bried Changes blind position to given value
+ */
+void changeBlindPos(int pos)
+{
+	if (pos < settingsMAX.blindPos && pos > settingsMIN.blindPos)
+	{
+		//Change pos
+		CCR1 = pos; // CCR1 PWM duty cycle
+		_BIS_SR(LPM0_bits); // Enter LPM0
+	}
+	else
+	{
+		//Do nothing
+	}
+	
+}
+
+/**
+ * changeLightLev
+ * \param New light level (int)
+ * \return None
+ * \brief Changes light level to given value
+ */
+void changeLightLev(int lev)
+{
+	if (lev < settingsMAX.lightLev && lev > settingsMIN.lightLev)
+	{
+		//Change level
+		CCR1 = lev; // CCR1 PWM duty cycle
+		_BIS_SR(LPM0_bits); // Enter LPM0
+	}
+	else
+	{
+		//Do nothing
+	}
+	
+}
+
+
 int main( void )
 {
     halInit();
+	
+	//Setup PWM
+	//Setup PWM
+	//ACCOUNTS FOR ONLY ONE PIN!
+	//TODO Guaranteed to be buggy. Find some new PWM code and usable pins
+	
+	P2DIR |= BIT2; // P2.2 to output
+	P2SEL |= BIT2; // P2.2 to TA0.1
+	
+	CCR0 = 1000-1; // PWM Period
+	CCTL1 = OUTMOD_7; // CCR1 reset/set
+	CCR1 = 250; // CCR1 PWM duty cycle
+	TACTL = TASSEL_2 + MC_1; // SMCLK, up mode
+	
+	_BIS_SR(LPM0_bits); // Enter LPM0
+	
+	
+	//Continue with ZNP
     printf("\r\n****************************************************\r\n");    
     printf("Basic Communications Example - END DEVICE - using AFZDO\r\n");
     
@@ -129,7 +195,64 @@ int main( void )
         clearLeds();        
         
         
+		/**
+		 * State		Settings
+		 * dayNorm		blindPos = 1024, lightLev = 0
+		 * nightNorm	blindPos = 0, lightLev = 1024
+		 * film			blindPos = 0, lightLev = 0 / lightLev = 250
+		 * open			blindPos = 1024, lightLev = 0
+		 * closed		blindPos = 0, lightLev = 0
+		 */
+		
         waitForMessage(0xF, 10);
+		
+		int cmd = znpBuf[1];
+		
+		switch (cmd) {
+			case CLOSE1:
+				changeBlindPos(0);
+				changeLightLev(0);
+				break;
+			case OPEN1:
+				changeBlindPos(1024);
+				changeLightLev(0);
+				break;
+			case FILM1:
+				changeBlindPos(0);
+				changeLightLev(250);
+				break;
+			case DAY1:
+				changeBlindPos(1024);
+				changeLightLev(0);
+				break;
+			case NIGHT1:
+				changeBlindPos(0);
+				changeLightLev(1024);
+				break;
+			case CLOSE2:
+				changeBlindPos(0);
+				changeLightLev(0);
+				break;
+			case OPEN2:
+				changeBlindPos(1024);
+				changeLightLev(0);
+				break;
+			case FILM2:
+				changeBlindPos(0);
+				changeLightLev(250);
+				break;
+			case DAY2:
+				changeBlindPos(1024);
+				changeLightLev(0);
+				break;
+			case NIGHT2:
+				changeBlindPos(0);
+				changeLightLev(1024);
+				break;
+			default:
+				break;
+		}
+		/*
         if(znpBuf[1] == 1)
         {
           //Turn on lights
@@ -155,6 +278,7 @@ int main( void )
         {
           //error
         }
+		 */
         HAL_SLEEP();
     }
 }

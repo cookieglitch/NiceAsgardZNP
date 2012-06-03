@@ -39,15 +39,24 @@
 #include "../ZNP/simple_api.h"
 #include "znp_example_utils.h"   //for handleReturnValue() and polling()
 
+#include "remotedefs.h"
+
 //uncomment only ONE of the two options below:
 //#define USE_SECURITY_MODE_PRECONFIGURED_KEYS
 //#define USE_SECURITY_MODE_COORD_DIST_KEYS
 
 unsigned char key[16] = {0x44, 0x65, 0x72, 0x65, 0x6B, 0x53, 0x6D, 0x69, 0x74, 0x68, 0x44, 0x65, 0x73, 0x69, 0x67, 0x6E};    //encryption key used in security
 
+int readUART()
+{
+	while (!(UCA0IFG&UCTXIFG));             // USCI_A0 TX buffer ready?
+    int rx = UCA0RXBUF;
+	return rx;
+}
+
 int main( void )
 {
-    halInit(); 
+    halInit(); //Sets up all hardware inc debug Tx/Rx (Used for WiFi <--> ZNP)
     printf("\r\n++++++++++++++++++++++++++++++++++++++++++++++++++++\r\n");        
     printf("\r\nBasic Communications Example - COORDINATOR - using Simple API\r\n");
     HAL_ENABLE_INTERRUPTS();
@@ -136,6 +145,7 @@ int main( void )
     
     while(1)
     {
+		/*
       int light = getLightSense();
       if(light > 100)
       {
@@ -145,6 +155,44 @@ int main( void )
       {
         sendData(0xC72, 0xF, 0x2, 1);
       }
+		 */
+		int cmd = readUART(); //Read UART
+		//Depending on command, send appropriate message to relevant end point
+		switch (cmd) {
+			case CLOSE1:
+				//sendData(dest, cluster, data, dataLength);
+				sendData(0xC72, 0xF, 0x1, 1);
+				break;
+			case OPEN1:
+				sendData(0xC72, 0xF, 0x2, 1);
+				break;
+			case FILM1:
+				sendData(0xC72, 0xF, 0x3, 1);
+				break;
+			case DAY1:
+				sendData(0xC72, 0xF, 0x4, 1);
+				break;
+			case NIGHT1:
+				sendData(0xC72, 0xF, 0x5, 1);
+				break;
+			case CLOSE2:
+				sendData(0xC72, 0xF, 0x6, 1);
+				break;
+			case OPEN2:
+				sendData(0xC72, 0xF, 0x7, 1);
+				break;
+			case FILM2:
+				sendData(0xC72, 0xF, 0x8, 1);
+				break;
+			case DAY2:
+				sendData(0xC72, 0xF, 0x9, 1);
+				break;
+			case NIGHT2:
+				sendData(0xC72, 0xF, 0xA, 1);
+				break;
+			default:
+				break;
+		}
     }
 }
 
